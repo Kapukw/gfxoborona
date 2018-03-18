@@ -13,16 +13,10 @@
 
 namespace vks {
 	namespace debug {
-#if !defined(__ANDROID__)
+
 		// On desktop the LunarG loaders exposes a meta layer that contains all layers
 		int32_t validationLayerCount = 1;
 		const char* validationLayerNames[] = {"VK_LAYER_LUNARG_standard_validation"};
-#else
-		// On Android we need to explicitly select all layers
-		int32_t validationLayerCount = 6;
-		const char* validationLayerNames[] = {"VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_core_validation",
-		                                      "VK_LAYER_LUNARG_swapchain", "VK_LAYER_GOOGLE_unique_objects"};
-#endif
 
 		PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback = VK_NULL_HANDLE;
 		PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback = VK_NULL_HANDLE;
@@ -67,16 +61,6 @@ namespace vks {
 			std::stringstream debugMessage;
 			debugMessage << prefix << " [" << pLayerPrefix << "] Code " << msgCode << " : " << pMsg;
 
-#if defined(__ANDROID__)
-			if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
-			{
-				LOGE("%s", debugMessage.str().c_str());
-			}
-			else
-			{
-				LOGD("%s", debugMessage.str().c_str());
-			}
-#else
 			if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
 			{
 				std::cerr << debugMessage.str() << "\n";
@@ -85,7 +69,6 @@ namespace vks {
 			{
 				std::cout << debugMessage.str() << "\n";
 			}
-#endif
 
 			fflush(stdout);
 

@@ -14,21 +14,6 @@ namespace vks {
 		this->createInfo = createInfo;
 		this->renderPass = createInfo.renderPass;
 
-#if defined(__ANDROID__)
-		if (vks::android::screenDensity >= ACONFIGURATION_DENSITY_XXHIGH)
-		{
-			scale = 3.5f;
-		}
-		else if (vks::android::screenDensity >= ACONFIGURATION_DENSITY_XHIGH)
-		{
-			scale = 2.5f;
-		}
-		else if (vks::android::screenDensity >= ACONFIGURATION_DENSITY_HIGH)
-		{
-			scale = 2.0f;
-		};
-#endif
-
 		// Init ImGui
 		// Color scheme
 		ImGuiStyle& style = ImGui::GetStyle();

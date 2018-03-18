@@ -16,7 +16,6 @@
     <ClInclude Include="frustum.hpp" />
     <ClInclude Include="keycodes.hpp" />
     <ClInclude Include="threadpool.hpp" />
-    <ClInclude Include="VulkanAndroid.h" />
     <ClInclude Include="VulkanBuffer.hpp" />
     <ClInclude Include="VulkanDebug.h" />
     <ClInclude Include="VulkanDevice.hpp" />
@@ -33,7 +32,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\..\external\imgui\imgui_draw.cpp" />
-    <ClCompile Include="VulkanAndroid.cpp" />
     <ClCompile Include="VulkanDebug.cpp" />
     <ClCompile Include="vulkanexamplebase.cpp" />
     <ClCompile Include="VulkanTools.cpp" />

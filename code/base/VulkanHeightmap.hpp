@@ -71,28 +71,14 @@ namespace vks {
 			return *(heightdata + (rpos.x + rpos.y * dim) * scale) / 65535.0f * heightScale;
 		}
 
-#if defined(__ANDROID__)
-		void loadFromFile(const std::string filename, uint32_t patchsize, glm::vec3 scale, Topology topology, AAssetManager* assetManager)
-#else
 		void loadFromFile(const std::string filename, uint32_t patchsize, glm::vec3 scale, Topology topology)
-#endif
 		{
 			assert(device);
 			assert(copyQueue != VK_NULL_HANDLE);
 
-#if defined(__ANDROID__)
-			AAsset* asset = AAssetManager_open(assetManager, filename.c_str(), AASSET_MODE_STREAMING);
-			assert(asset);
-			size_t size = AAsset_getLength(asset);
-			assert(size > 0);
-			void* textureData = malloc(size);
-			AAsset_read(asset, textureData, size);
-			AAsset_close(asset);
-			gli::texture2d heightTex(gli::load((const char*)textureData, size));
-			free(textureData);
-#else
+
 			gli::texture2d heightTex(gli::load(filename));
-#endif
+
 			dim = static_cast<uint32_t>(heightTex.extent().x);
 			heightdata = new uint16_t[dim * dim];
 			memcpy(heightdata, heightTex.data(), heightTex.size());

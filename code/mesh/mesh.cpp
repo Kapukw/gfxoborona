@@ -1,10 +1,10 @@
 /*
-* Vulkan Example - Model loading and rendering
-*
-* Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
-*
-* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
-*/
+ * Vulkan Example - Model loading and rendering
+ *
+ * Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
+ *
+ * This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,8 +18,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <assimp/Importer.hpp> 
-#include <assimp/scene.h>     
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/cimport.h>
 
@@ -35,11 +35,13 @@ class VulkanExample : public VulkanExampleBase
 public:
 	bool wireframe = false;
 
-	struct {
+	struct
+	{
 		vks::Texture2D colorMap;
 	} textures;
 
-	struct {
+	struct
+	{
 		VkPipelineVertexInputStateCreateInfo inputState;
 		std::vector<VkVertexInputBindingDescription> bindingDescriptions;
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
@@ -47,7 +49,8 @@ public:
 
 	// Vertex layout used in this example
 	// This must fit input locations of the vertex shader used to render the model
-	struct Vertex {
+	struct Vertex
+	{
 		glm::vec3 pos;
 		glm::vec3 normal;
 		glm::vec2 uv;
@@ -56,12 +59,15 @@ public:
 
 	// Contains all Vulkan resources required to represent vertex and index buffers for a model
 	// This is for demonstration and learning purposes, the other examples use a model loader class for easy access
-	struct Model {
-		struct {
+	struct Model
+	{
+		struct
+		{
 			VkBuffer buffer;
 			VkDeviceMemory memory;
 		} vertices;
-		struct {
+		struct
+		{
 			int count;
 			VkBuffer buffer;
 			VkDeviceMemory memory;
@@ -76,17 +82,20 @@ public:
 		};
 	} model;
 
-	struct {
+	struct
+	{
 		vks::Buffer scene;
 	} uniformBuffers;
 
-	struct {
+	struct
+	{
 		glm::mat4 projection;
 		glm::mat4 model;
 		glm::vec4 lightPos = glm::vec4(25.0f, 5.0f, 5.0f, 1.0f);
 	} uboVS;
 
-	struct Pipelines {
+	struct Pipelines
+	{
 		VkPipeline solid;
 		VkPipeline wireframe = VK_NULL_HANDLE;
 	} pipelines;
@@ -100,18 +109,19 @@ public:
 		zoom = -5.5f;
 		zoomSpeed = 2.5f;
 		rotationSpeed = 0.5f;
-		rotation = { -0.5f, -112.75f, 0.0f };
-		cameraPos = { 0.1f, 1.1f, 0.0f };
+		rotation = {-0.5f, -112.75f, 0.0f};
+		cameraPos = {0.1f, 1.1f, 0.0f};
 		title = "Model rendering";
 		settings.overlay = true;
 	}
 
 	~VulkanExample()
 	{
-		// Clean up used Vulkan resources 
+		// Clean up used Vulkan resources
 		// Note : Inherited destructor cleans up resources stored in base class
 		vkDestroyPipeline(device, pipelines.solid, nullptr);
-		if (pipelines.wireframe != VK_NULL_HANDLE) {
+		if (pipelines.wireframe != VK_NULL_HANDLE)
+		{
 			vkDestroyPipeline(device, pipelines.wireframe, nullptr);
 		}
 
@@ -127,7 +137,8 @@ public:
 	virtual void getEnabledFeatures()
 	{
 		// Fill mode non solid is required for wireframe display
-		if (deviceFeatures.fillModeNonSolid) {
+		if (deviceFeatures.fillModeNonSolid)
+		{
 			enabledFeatures.fillModeNonSolid = VK_TRUE;
 		};
 	}
@@ -138,7 +149,7 @@ public:
 
 		VkClearValue clearValues[2];
 		clearValues[0].color = defaultClearColor;
-		clearValues[1].depthStencil = { 1.0f, 0 };
+		clearValues[1].depthStencil = {1.0f, 0};
 
 		VkRenderPassBeginInfo renderPassBeginInfo = vks::initializers::renderPassBeginInfo();
 		renderPassBeginInfo.renderPass = renderPass;
@@ -167,7 +178,7 @@ public:
 			vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
 			vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, wireframe ? pipelines.wireframe : pipelines.solid);
 
-			VkDeviceSize offsets[1] = { 0 };
+			VkDeviceSize offsets[1] = {0};
 			// Bind mesh vertex buffer
 			vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &model.vertices.buffer, offsets);
 			// Bind mesh index buffer
@@ -187,31 +198,12 @@ public:
 		// Load the model from file using ASSIMP
 
 		const aiScene* scene;
-		Assimp::Importer Importer;		
+		Assimp::Importer Importer;
 
 		// Flags for loading the mesh
 		static const int assimpFlags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices;
 
-#if defined(__ANDROID__)
-		// Meshes are stored inside the apk on Android (compressed)
-		// So they need to be loaded via the asset manager
-
-		AAsset* asset = AAssetManager_open(androidApp->activity->assetManager, filename.c_str(), AASSET_MODE_STREAMING);
-		assert(asset);
-		size_t size = AAsset_getLength(asset);
-
-		assert(size > 0);
-
-		void *meshData = malloc(size);
-		AAsset_read(asset, meshData, size);
-		AAsset_close(asset);
-
-		scene = Importer.ReadFileFromMemory(meshData, size, assimpFlags);
-
-		free(meshData);
-#else
 		scene = Importer.ReadFile(filename.c_str(), assimpFlags);
-#endif
 
 		// Generate vertex buffer from ASSIMP scene data
 		float scale = 1.0f;
@@ -259,11 +251,14 @@ public:
 
 		// Static mesh should always be device local
 
+		// clang-format off
+
 		bool useStaging = true;
 
 		if (useStaging)
 		{
-			struct {
+			struct
+			{
 				VkBuffer buffer;
 				VkDeviceMemory memory;
 			} vertexStaging, indexStaging;
@@ -349,27 +344,35 @@ public:
 				&model.indices.memory,
 				indexBuffer.data()));
 		}
+
+		// clang-format on
 	}
 
 	void loadAssets()
 	{
 		loadModel(getAssetPath() + "models/voyager/voyager.dae");
-		if (deviceFeatures.textureCompressionBC) {
+		if (deviceFeatures.textureCompressionBC)
+		{
 			textures.colorMap.loadFromFile(getAssetPath() + "models/voyager/voyager_bc3_unorm.ktx", VK_FORMAT_BC3_UNORM_BLOCK, vulkanDevice, queue);
 		}
-		else if (deviceFeatures.textureCompressionASTC_LDR) {
+		else if (deviceFeatures.textureCompressionASTC_LDR)
+		{
 			textures.colorMap.loadFromFile(getAssetPath() + "models/voyager/voyager_astc_8x8_unorm.ktx", VK_FORMAT_ASTC_8x8_UNORM_BLOCK, vulkanDevice, queue);
 		}
-		else if (deviceFeatures.textureCompressionETC2) {
+		else if (deviceFeatures.textureCompressionETC2)
+		{
 			textures.colorMap.loadFromFile(getAssetPath() + "models/voyager/voyager_etc2_unorm.ktx", VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK, vulkanDevice, queue);
 		}
-		else {
+		else
+		{
 			vks::tools::exitFatal("Device does not support any compressed texture format!", VK_ERROR_FEATURE_NOT_PRESENT);
 		}
 	}
 
 	void setupVertexDescriptions()
 	{
+		// clang-format off
+
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
 		vertices.bindingDescriptions[0] =
@@ -410,6 +413,8 @@ public:
 				VK_FORMAT_R32G32B32_SFLOAT,
 				offsetof(Vertex, color));
 
+		// clang-format on
+
 		vertices.inputState = vks::initializers::pipelineVertexInputStateCreateInfo();
 		vertices.inputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertices.bindingDescriptions.size());
 		vertices.inputState.pVertexBindingDescriptions = vertices.bindingDescriptions.data();
@@ -420,31 +425,28 @@ public:
 	void setupDescriptorPool()
 	{
 		// Example uses one ubo and one combined image sampler
-		std::vector<VkDescriptorPoolSize> poolSizes =
-		{
-			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
-			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1),
+		std::vector<VkDescriptorPoolSize> poolSizes = {
+		    vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
+		    vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1),
 		};
 
-		VkDescriptorPoolCreateInfo descriptorPoolInfo =
-			vks::initializers::descriptorPoolCreateInfo(
-				static_cast<uint32_t>(poolSizes.size()),
-				poolSizes.data(),
-				1);
+		VkDescriptorPoolCreateInfo descriptorPoolInfo = vks::initializers::descriptorPoolCreateInfo(static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), 1);
 
 		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool));
 	}
+
+	// clang-format off
 
 	void setupDescriptorSetLayout()
 	{
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
 		{
-			// Binding 0 : Vertex shader uniform buffer
+		    // Binding 0 : Vertex shader uniform buffer
 			vks::initializers::descriptorSetLayoutBinding(
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				VK_SHADER_STAGE_VERTEX_BIT,
 				0),
-			// Binding 1 : Fragment shader combined sampler
+		    // Binding 1 : Fragment shader combined sampler
 			vks::initializers::descriptorSetLayoutBinding(
 				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 				VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -490,7 +492,7 @@ public:
 				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				0,
 				&uniformBuffers.scene.descriptor),
-			// Binding 1 : Color map 
+		                                                         // Binding 1 : Color map
 			vks::initializers::writeDescriptorSet(
 				descriptorSet,
 				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -499,6 +501,7 @@ public:
 		};
 
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, NULL);
+
 	}
 
 	void preparePipelines()
@@ -577,23 +580,22 @@ public:
 		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.solid));
 
 		// Wire frame rendering pipeline
-		if (deviceFeatures.fillModeNonSolid) {
+		if (deviceFeatures.fillModeNonSolid)
+		{
 			rasterizationState.polygonMode = VK_POLYGON_MODE_LINE;
 			rasterizationState.lineWidth = 1.0f;
 			VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.wireframe));
 		}
 	}
 
+	// clang-format on
+
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffers()
 	{
 		// Vertex shader uniform buffer block
-		VK_CHECK_RESULT(vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			&uniformBuffers.scene,
-			sizeof(uboVS)));
-		
+		VK_CHECK_RESULT(vulkanDevice->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &uniformBuffers.scene, sizeof(uboVS)));
+
 		// Map persistent
 		VK_CHECK_RESULT(uniformBuffers.scene.map());
 
@@ -653,10 +655,12 @@ public:
 		updateUniformBuffers();
 	}
 
-	virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
+	virtual void OnUpdateUIOverlay(vks::UIOverlay* overlay)
 	{
-		if (overlay->header("Settings")) {
-			if (overlay->checkBox("Wireframe", &wireframe)) {
+		if (overlay->header("Settings"))
+		{
+			if (overlay->checkBox("Wireframe", &wireframe))
+			{
 				buildCommandBuffers();
 			}
 		}
